@@ -1,72 +1,52 @@
-use std::io;
-
-fn display_board(board: &[[char; 3]; 3]) {
-    for row in board.iter() {
-        for &cell in row.iter() {
-            print!("{} ", cell);
-        }
-        println!("");
-    }
-}
-
-fn check_win(board: &[[char; 3]; 3]) -> bool {
-    for row in 0..3 {
-        if board[row][0] != ' ' && board[row][0] == board[row][1] && board[row][1] == board[row][2] {
-            return true;
-        }
-    }
-
-    for col in 0..3 {
-        if board[0][col] != ' ' && board[0][col] == board[1][col] && board[1][col] == board[2][col] {
-            return true;
-        }
-    }
-
-    if board[0][0] != ' ' && board[0][0] == board[1][1] && board[1][1] == board[2][2] {
-        return true;
-    }
-
-    if board[0][2] != ' ' && board[0][2] == board[1][1] && board[1][1] == board[2][0] {
-        return true;
-    }
-
-    return false;
-}
-
-fn check_draw(board: &[[char; 3]; 3]) -> bool {
-    for row in board.iter() {
-        for &cell in row.iter() {
-            if cell == ' ' {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
+use rand::Rng;
+use clipboard::ClipboardProvider;
+use clipboard::ClipboardContext;
 
 fn main() {
-    let mut board = [[' ';3];3];
-    let mut player = 'X';
-    loop {
-        display_board(&board);
-        println!("Player {}'s turn. Please enter row and column:", player);
-        let mut move_input = String::new();
-        io::stdin().read_line(&mut move_input).unwrap();
-        let move_vec: Vec<usize> = move_input.trim().split(" ").map(|x| x.parse().unwrap()).collect();
-        let (row, col) = (move_vec[0], move_vec[1]);
-        if board[row][col] == ' ' {
-            board[row][col] = player;
-            if check_win(&board) {
-                println!("Player {} wins!", player);
-                break;
-            } else if check_draw(&board) {
-                println!("It's a draw!");
-                break;
-            }
-            player = if player == 'X' { 'O' } else { 'X' };
-        } else {
-            println!("Invalid move, please try again");
-        }
-    }
+    let mut password_length = String::new();
+    let mut use_uppercase = String::new();
+    let mut use_lowercase = String::new();
+    let mut use_numbers = String::new();
+    let mut use_symbols = String::new();
+
+    println!("Enter password length:");
+    std::io::stdin().read_line(&mut password_length).unwrap();
+    let password_length: usize = password_length.trim().parse().unwrap();
+
+    println!("Include uppercase letters? (y/n)");
+    std::io::stdin().read_line(&mut use_uppercase).unwrap();
+    let use_uppercase = use_uppercase.trim().to_lowercase() == "y";
+
+    println!("Include lowercase letters? (y/n)");
+    std::io::stdin().read_line(&mut use_lowercase).unwrap();
+    let use_lowercase = use_lowercase.trim().to_lowercase() == "y";
+
+    println!("Include numbers? (y/n)");
+    std::io::stdin().read_line(&mut use_numbers).unwrap();
+    let use_numbers = use_numbers.trim().to_lowercase() == "y";
+
+    println!("Include symbols? (y/n)");
+    std::io::stdin().read_line(&mut use_symbols).unwrap();
+    let use_symbols = use_symbols.trim().to_lowercase() == "y";
+
+    let characters: Vec<char> = [
+        if use_uppercase { (65..=90) } else { (0..0) },
+        if use_lowercase { (97..=122) } else { (0..0) },
+        if use_numbers { (48..=57) } else { (0..0) },
+        if use_symbols { (33..=47).chain(58..=64).chain(91..=96).chain(123..=126) } else { (0..0) },
+    ]
+    .iter()
+    .flatten()
+    .map(|&i| i as u8 as char)
+    .collect();
+
+    let password: String = (0..password_length)
+        .map(|_| characters[rand::thread_rng().gen_range(0..characters.len())])
+        .collect();
+
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+    ctx.set_contents(password).unwrap();
+
+    println!("Password generated: {}", password);
+    println!("Password copied to clipboard");
 }
