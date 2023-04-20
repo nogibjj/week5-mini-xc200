@@ -1,5 +1,5 @@
-# rust-new-project-template
-A good starting point for a new Rust project
+# random password generator
+This is a simple command-line tool written in Rust to generate a random password based on user input. The program prompts the user to specify the password length and whether to include uppercase letters, lowercase letters, numbers, and symbols.
 
 ## References
 
